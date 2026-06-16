@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel de Control — Agente de Voz Inmobiliario CDMX</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0f1117;
+      --surface:     #1a1d27;
+      --surface-2:   #242736;
+      --border:      #2e3147;
+      --text:        #e2e8f0;
+      --text-muted:  #8892a4;
+      --accent:      #6366f1;
+      --blue:        #3b82f6;
+      --green:       #22c55e;
+      --purple:      #a855f7;
+      --orange:      #f97316;
+      --red:         #ef4444;
+      --radius:      10px;
+      --shadow:      0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 0 0 40px;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+
+    header .subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      transition: background 0.3s;
+    }
+
+    .status-dot.connected { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.error     { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+    /* ── Layout ── */
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 32px 0;
+    }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent);
+    }
+
+    .stat-card .label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .stat-card .value {
+      font-size: 2.4rem;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text);
+      transition: color 0.3s;
+    }
+
+    .stat-card .icon {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    .stat-card.active  .value { color: var(--blue); }
+    .stat-card.completed .value { color: var(--green); }
+    .stat-card.leads   .value { color: var(--accent); }
+    .stat-card.appts   .value { color: var(--orange); }
+    .stat-card.reports .value { color: var(--purple); }
+
+    /* ── Event feed ── */
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .event-feed {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .event-feed-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .event-feed-header span {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    #event-list {
+      list-style: none;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    #event-list::-webkit-scrollbar { width: 4px; }
+    #event-list::-webkit-scrollbar-track { background: transparent; }
+    #event-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .event-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      animation: slideIn 0.3s ease;
+      transition: background 0.2s;
+    }
+
+    .event-item:last-child { border-bottom: none; }
+    .event-item:hover { background: var(--surface-2); }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .event-badge {
+      flex-shrink: 0;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 10px;
+      border-radius: 999px;
+      margin-top: 2px;
+    }
+
+    .badge-call_started       { background: rgba(59,130,246,0.15); color: var(--blue);   border: 1px solid rgba(59,130,246,0.3); }
+    .badge-call_ended         { background: rgba(34,197,94,0.15);  color: var(--green);  border: 1px solid rgba(34,197,94,0.3); }
+    .badge-report_generated   { background: rgba(168,85,247,0.15); color: var(--purple); border: 1px solid rgba(168,85,247,0.3); }
+    .badge-appointment_scheduled { background: rgba(249,115,22,0.15); color: var(--orange); border: 1px solid rgba(249,115,22,0.3); }
+    .badge-ping               { background: rgba(139,148,164,0.1); color: var(--text-muted); border: 1px solid var(--border); }
+
+    .event-content { flex: 1; min-width: 0; }
+
+    .event-description {
+      font-size: 0.85rem;
+      color: var(--text);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .event-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .empty-state {
+      padding: 48px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      header { flex-direction: column; align-items: flex-start; gap: 12px; }
+      main { padding: 20px 16px 0; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Panel de Control — Agente de Voz Inmobiliario CDMX</h1>
+    <div class="subtitle">Monitoreo en tiempo real · AI Voice Operations</div>
+  </div>
+  <div class="status-pill" id="conn-status">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Conectando...</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- Stats grid -->
+  <div class="stats-grid">
+    <div class="stat-card active">
+      <div class="icon">📞</div>
+      <div class="label">Llamadas Activas</div>
+      <div class="value" id="stat-active">{{ stats.active_calls }}</div>
+    </div>
+    <div class="stat-card completed">
+      <div class="icon">✅</div>
+      <div class="label">Llamadas Completadas</div>
+      <div class="value" id="stat-completed">{{ stats.completed_calls }}</div>
+    </div>
+    <div class="stat-card leads">
+      <div class="icon">👤</div>
+      <div class="label">Leads Registrados</div>
+      <div class="value" id="stat-leads">{{ stats.leads_registered }}</div>
+    </div>
+    <div class="stat-card appts">
+      <div class="icon">📅</div>
+      <div class="label">Citas Agendadas</div>
+      <div class="value" id="stat-appts">{{ stats.appointments_scheduled }}</div>
+    </div>
+    <div class="stat-card reports">
+      <div class="icon">📋</div>
+      <div class="label">Reportes Generados</div>
+      <div class="value" id="stat-reports">{{ stats.reports_generated }}</div>
+    </div>
+  </div>
+
+  <!-- Event feed -->
+  <div class="section-title">Feed de Eventos en Vivo</div>
+  <div class="event-feed">
+    <div class="event-feed-header">
+      <span>Últimos 20 eventos</span>
+      <span id="last-update">—</span>
+    </div>
+    <ul id="event-list">
+      <li class="empty-state" id="empty-msg">En espera de eventos...</li>
+    </ul>
+  </div>
+
+</main>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────────────────────
+
+  function formatTimestamp(iso) {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function eventDescription(event) {
+    const d = event.data || {};
+    switch (event.type) {
+      case 'call_started':
+        return `Llamada entrante desde <strong>${d.from_number || 'N/D'}</strong>` +
+               (d.call_id ? ` <span style="color:var(--text-muted)">(${d.call_id})</span>` : '');
+      case 'call_ended':
+        return `Llamada finalizada · Prospecto: <strong>${d.nombre || d.from_number || 'N/D'}</strong>` +
+               (d.duracion_segundos ? ` · ${d.duracion_segundos}s` : '');
+      case 'report_generated':
+        return `Reporte generado para <strong>${d.nombre || 'N/D'}</strong>`;
+      case 'appointment_scheduled':
+        return `Cita agendada para <strong>${d.nombre || 'N/D'}</strong>` +
+               (d.startTime ? ` el ${new Date(d.startTime).toLocaleDateString('es-MX')}` : '');
+      default:
+        return event.type;
+    }
+  }
+
+  // ── DOM ──────────────────────────────────────────────────────────────────
+
+  const eventList   = document.getElementById('event-list');
+  const emptyMsg    = document.getElementById('empty-msg');
+  const statusDot   = document.getElementById('status-dot');
+  const statusText  = document.getElementById('status-text');
+  const lastUpdate  = document.getElementById('last-update');
+
+  let eventCount = 0;
+
+  function setStatus(state) {
+    statusDot.className = 'status-dot ' + state;
+    if (state === 'connected') statusText.textContent = 'Conectado';
+    else if (state === 'error') statusText.textContent = 'Sin conexión';
+    else statusText.textContent = 'Conectando...';
+  }
+
+  function updateStats(stats) {
+    document.getElementById('stat-active').textContent    = stats.active_calls;
+    document.getElementById('stat-completed').textContent = stats.completed_calls;
+    document.getElementById('stat-leads').textContent     = stats.leads_registered;
+    document.getElementById('stat-appts').textContent     = stats.appointments_scheduled;
+    document.getElementById('stat-reports').textContent   = stats.reports_generated;
+    lastUpdate.textContent = 'Actualizado ' + new Date().toLocaleTimeString('es-MX');
+  }
+
+  function prependEvent(event) {
+    if (event.type === 'ping') return;
+
+    if (emptyMsg) emptyMsg.remove();
+    eventCount++;
+
+    const li = document.createElement('li');
+    li.className = 'event-item';
+    li.innerHTML = `
+      <span class="event-badge badge-${event.type}">${event.type.replace(/_/g,' ')}</span>
+      <div class="event-content">
+        <div class="event-description">${eventDescription(event)}</div>
+        <div class="event-meta">${formatTimestamp(event.timestamp)}</div>
+      </div>
+    `;
+
+    eventList.insertBefore(li, eventList.firstChild);
+
+    // Keep only 20 items visible
+    while (eventList.children.length > 20) {
+      eventList.removeChild(eventList.lastChild);
+    }
+  }
+
+  // ── Stats polling fallback ────────────────────────────────────────────────
+
+  async function fetchStats() {
+    try {
+      const res = await fetch('/dashboard/api/stats');
+      if (res.ok) updateStats(await res.json());
+    } catch (e) { /* silent */ }
+  }
+
+  setInterval(fetchStats, 30_000);
+
+  // ── Load recent events on page load ──────────────────────────────────────
+
+  (async () => {
+    try {
+      const res = await fetch('/dashboard/api/recent-events');
+      if (res.ok) {
+        const events = await res.json();
+        // Show last 20 in reverse-chronological order (newest first)
+        events.slice(-20).reverse().forEach(prependEvent);
+      }
+      await fetchStats();
+    } catch (e) { /* silent */ }
+  })();
+
+  // ── SSE connection ────────────────────────────────────────────────────────
+
+  let es;
+  let retryDelay = 2000;
+
+  function connectSSE() {
+    setStatus('');
+    es = new EventSource('/dashboard/api/events');
+
+    es.onopen = () => {
+      setStatus('connected');
+      retryDelay = 2000;
+    };
+
+    es.onmessage = async (e) => {
+      try {
+        const event = JSON.parse(e.data);
+        prependEvent(event);
+        if (event.type !== 'ping') await fetchStats();
+      } catch (_) { /* malformed JSON */ }
+    };
+
+    es.onerror = () => {
+      setStatus('error');
+      es.close();
+      setTimeout(connectSSE, retryDelay);
+      retryDelay = Math.min(retryDelay * 1.5, 30_000);
+    };
+  }
+
+  connectSSE();
+</script>
+</body>
+</html>
