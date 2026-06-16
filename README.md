@@ -475,6 +475,6 @@ It does not guarantee lead conversion, revenue growth, appointment attendance, o
 AI Integrations Specialist
 
 * GitHub: [github.com/rodezi](https://github.com/rodezi)
-* LinkedIn: [Add LinkedIn profile](YOUR_LINKEDIN_URL)
+* LinkedIn: [Add LinkedIn profile](www.linkedin.com/in/rodrigo-zayas-e)
 * Email: [rodezayas@gmail.com](mailto:rodezayas@gmail.com)
 * Location: Querétaro, Mexico
