@@ -1,6 +1,6 @@
 # AI Voice Operations for Real Estate
 
-An end-to-end AI voice system designed to handle inbound calls, qualify real estate prospects, recommend relevant properties, schedule appointments, register leads in a CRM, and generate structured post-call reports.
+An end-to-end AI implementation case study voice system designed to handle inbound calls, qualify real estate prospects, recommend relevant properties, schedule appointments, register leads in a CRM, and generate structured post-call reports.
 
 The system is designed for real estate teams that need to respond to inbound inquiries consistently, including during periods when human agents are unavailable or managing other prospects.
 
